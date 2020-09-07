@@ -16,9 +16,9 @@
 package com.hivemq.extensions.handler;
 
 import com.google.common.collect.Lists;
-import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.common.shutdown.ShutdownHooks;
 import com.hivemq.configuration.service.FullConfigurationService;
+import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extension.sdk.api.async.Async;
 import com.hivemq.extension.sdk.api.async.TimeoutFallback;
 import com.hivemq.extension.sdk.api.interceptor.publish.PublishInboundInterceptor;
@@ -35,7 +35,7 @@ import com.hivemq.extensions.executor.PluginTaskExecutorService;
 import com.hivemq.extensions.executor.PluginTaskExecutorServiceImpl;
 import com.hivemq.extensions.executor.task.PluginTaskExecutor;
 import com.hivemq.extensions.packets.general.ModifiableDefaultPermissionsImpl;
-import com.hivemq.mqtt.handler.disconnect.Mqtt3ServerDisconnector;
+import com.hivemq.mqtt.handler.disconnect.MqttServerDisconnector;
 import com.hivemq.mqtt.message.Message;
 import com.hivemq.mqtt.message.ProtocolVersion;
 import com.hivemq.mqtt.message.QoS;
@@ -76,7 +76,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -109,7 +111,7 @@ public class IncomingPublishHandlerTest {
     private FullConfigurationService configurationService;
 
     @Mock
-    private Mqtt3ServerDisconnector mqtt3ServerDisconnector;
+    private MqttServerDisconnector mqttServerDisconnector;
 
     private EmbeddedChannel channel;
     private ChannelHandlerContext channelHandlerContext;
@@ -142,7 +144,7 @@ public class IncomingPublishHandlerTest {
         pluginTaskExecutorService = new PluginTaskExecutorServiceImpl(() -> executor1, mock(ShutdownHooks.class));
         incomingPublishHandler =
                 new IncomingPublishHandler(pluginTaskExecutorService, asyncer, hiveMQExtensions, messageDroppedService,
-                        pluginAuthorizerService, mqtt3ServerDisconnector, configurationService);
+                        pluginAuthorizerService, mqttServerDisconnector, configurationService);
 
         channel.pipeline().addFirst(incomingPublishHandler);
         channelHandlerContext = channel.pipeline().context(IncomingPublishHandler.class);
@@ -506,7 +508,7 @@ public class IncomingPublishHandlerTest {
         }
 
         assertTrue(dropLatch.await(5, TimeUnit.SECONDS));
-        verify(mqtt3ServerDisconnector).disconnect(eq(channel), anyString(), anyString(), any(), any());
+        verify(mqttServerDisconnector).disconnect(eq(channel), anyString(), anyString(), any(), any());
 
     }
 
